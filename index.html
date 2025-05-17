@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Scratch Style Clicker Game with Autosave</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
+
+  body {
+    margin: 0;
+    padding: 2rem;
+    background: #5cacee;
+    font-family: 'Luckiest Guy', cursive;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #333;
+    user-select: none;
+  }
+  header {
+    font-size: 3rem;
+    color: #fff;
+    text-shadow: 3px 3px 0 #000000aa;
+    margin-bottom: 2rem;
+  }
+  #game {
+    background: #fefefe;
+    border-radius: 30px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    padding: 2rem;
+    width: 400px;
+    max-width: 95vw;
+  }
+
+  #score {
+    font-size: 2.2rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #222;
+  }
+
+  #scratch-button {
+    width: 180px;
+    height: 180px;
+    background: #ffd93b;
+    border: 12px solid #ff8c00;
+    border-radius: 50%;
+    font-size: 7rem;
+    line-height: 1;
+    color: #ff6600;
+    text-align: center;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    box-shadow: 0 6px 0 #f08a00;
+    transition: box-shadow 0.1s ease, transform 0.1s ease;
+    margin: 0 auto 2rem;
+  }
+  #scratch-button:active {
+    box-shadow: 0 1px 0 #f08a00;
+    transform: translateY(5px);
+  }
+  #scratch-button:hover {
+    filter: brightness(1.1);
+  }
+
+  @keyframes swing {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(15deg); }
+  }
+  #scratch-button:hover {
+    animation: swing 0.6s ease-in-out infinite;
+  }
+
+  #shop {
+    margin-top: 2rem;
+  }
+  #shop h2 {
+    font-family: 'Luckiest Guy', cursive;
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #ff6600;
+    text-shadow: 2px 2px 0 #f09a00;
+  }
+
+  .shop-item {
+    background: #fff8e1;
+    border: 4px solid #ff8c00;
+    border-radius: 15px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+  }
+  .shop-item:hover:not(.disabled) {
+    background-color: #ffeb99;
+  }
+  .shop-item.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .shop-info {
+    max-width: 65%;
+  }
+  .shop-item-name {
+    font-size: 1.3rem;
+    color: #ff6600;
+    font-weight: 700;
+  }
+  .shop-item-desc {
+    font-style: italic;
+    color: #cc6600;
+    font-size: 0.9rem;
+    margin-top: 0.1rem;
+  }
+  .shop-item-stats {
+    font-weight: 700;
+    color: #ff7e00;
+    font-size: 0.95rem;
+    margin-top: 0.1rem;
+  }
+  .shop-cost {
+    font-weight: 800;
+    color: #ff5500;
+    font-size: 1.1rem;
+    min-width: 70px;
+    text-align: right;
+  }
+  .shop-buy-btn {
+    background: #ff6600;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 4px #cc5200;
+    transition: background-color 0.2s ease;
+    margin-left: 1rem;
+  }
+  .shop-buy-btn:disabled, .shop-item.disabled .shop-buy-btn {
+    background: #ffa366;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .shop-buy-btn:hover:not(:disabled) {
+    background: #ff7e00;
+  }
+
+  #footer {
+    margin-top: 3rem;
+    font-size: 1rem;
+    color: #fff8e1;
+    text-align: center;
+    text-shadow: 0 0 7px #b56c00aa;
+  }
+
+</style>
+</head>
+<body>
+  <header>Scratch Clicker</header>
+  <div id="game" role="main" aria-label="Scratch clicker game">
+    <div id="score" aria-live="polite" aria-atomic="true">Points: 0</div>
+    <button id="scratch-button" aria-label="Scratch clickable button" title="Click to earn points">🐱</button>
+    <div id="shop" aria-label="Shop upgrades">
+      <h2>Shop</h2>
+    </div>
+  </div>
+  <footer id="footer">Created with ♥ by BLACKBOXAI</footer>
+
+<script>
+(() => {
+  const STORAGE_KEY = 'scratchClickerGameSave';
+
+  const defaultState = {
+    points: 0,
+    pointsPerClick: 1,
+    pointsPerSecond: 0,
+    upgrades: [
+      {
+        id: 'pocket-wiper',
+        name: 'Pocket Wiper',
+        description: 'Increases points per click by 1',
+        baseCost: 15,
+        cost: 15,
+        quantity: 0,
+        type: 'click',
+        effect: 1,
+      },
+      {
+        id: 'speed-glove',
+        name: 'Speed Glove',
+        description: 'Increases points per click by 5',
+        baseCost: 100,
+        cost: 100,
+        quantity: 0,
+        type: 'click',
+        effect: 5,
+      },
+      {
+        id: 'auto-scratch',
+        name: 'Auto Scratch',
+        description: 'Earn 2 points automatically every second',
+        baseCost: 200,
+        cost: 200,
+        quantity: 0,
+        type: 'auto',
+        effect: 2,
+      },
+      {
+        id: 'dust-remover',
+        name: 'Dust Remover',
+        description: 'Earn 10 points automatically every second',
+        baseCost: 1200,
+        cost: 1200,
+        quantity: 0,
+        type: 'auto',
+        effect: 10,
+      },
+      {
+        id: 'mega-wiper',
+        name: 'Mega Wiper',
+        description: 'Increases points per click by 15',
+        baseCost: 5000,
+        cost: 5000,
+        quantity: 0,
+        type: 'click',
+        effect: 15,
+      },
+      {
+        id: 'turbo-gloves',
+        name: 'Turbo Gloves',
+        description: 'Increases points per click by 50',
+        baseCost: 22000,
+        cost: 22000,
+        quantity: 0,
+        type: 'click',
+        effect: 50,
+      },
+      {
+        id: 'ultimate-auto-scratch',
+        name: 'Ultimate Auto Scratch',
+        description: 'Earn 100 points automatically every second',
+        baseCost: 50000,
+        cost: 50000,
+        quantity: 0,
+        type: 'auto',
+        effect: 100,
+      }
+    ]
+  };
+
+  let state = {...defaultState};
+
+  const scoreEl = document.getElementById('score');
+  const scratchBtn = document.getElementById('scratch-button');
+  const shopEl = document.getElementById('shop');
+
+  function formatNumber(num) {
+    if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+    if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
+    return num.toString();
+  }
+
+  function saveGame() {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch(e){
+      console.warn('Failed to save game:', e);
+    }
+  }
+
+  function loadGame() {
+    try {
+      const saved = window.localStorage.getItem(STORAGE_KEY);
+      if(saved) {
+        const savedState = JSON.parse(saved);
+        if(savedState.points !== undefined) state.points = savedState.points;
+        if(savedState.upgrades && Array.isArray(savedState.upgrades)) {
+          for(const saveUpg of savedState.upgrades){
+            const currentUpg = state.upgrades.find(u => u.id === saveUpg.id);
+            if(currentUpg){
+              currentUpg.quantity = saveUpg.quantity || 0;
+              currentUpg.cost = saveUpg.cost || currentUpg.baseCost;
+            }
+          }
+        }
+      }
+    } catch(e){
+      console.warn('Failed to load game:', e);
+    }
+  }
+
+  function recalcPoints() {
+    let ppc = 1;
+    let pps = 0;
+    for(const upg of state.upgrades){
+      if(upg.type === 'click'){
+        ppc += upg.effect * upg.quantity;
+      } else if(upg.type === 'auto'){
+        pps += upg.effect * upg.quantity;
+      }
+    }
+    state.pointsPerClick = ppc;
+    state.pointsPerSecond = pps;
+  }
+
+  function updateScore() {
+    scoreEl.textContent = `Points: ${formatNumber(state.points)}`;
+  }
+
+  function canAfford(cost) {
+    return state.points >= cost;
+  }
+
+  function buyUpgrade(upg) {
+    if(!canAfford(upg.cost)) return;
+    state.points -= upg.cost;
+    upg.quantity++;
+    upg.cost = Math.floor(upg.cost * 1.5);
+    recalcPoints();
+    updateScore();
+    renderShop();
+    saveGame();
+  }
+
+  function renderShop() {
+    // clear old items except h2
+    while(shopEl.children.length > 1){
+      shopEl.removeChild(shopEl.lastChild);
+    }
+    // Create shop items
+    for(const upg of state.upgrades){
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'shop-item';
+      if(!canAfford(upg.cost)) itemDiv.classList.add('disabled');
+
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'shop-info';
+
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'shop-item-name';
+      nameDiv.textContent = `${upg.name} x${upg.quantity}`;
+
+      const descDiv = document.createElement('div');
+      descDiv.className = 'shop-item-desc';
+      descDiv.textContent = upg.description;
+
+      const statsDiv = document.createElement('div');
+      statsDiv.className = 'shop-item-stats';
+      if(upg.type === 'click'){
+        statsDiv.textContent = `+${upg.effect} points/click each`;
+      } else {
+        statsDiv.textContent = `+${upg.effect} points/sec each`;
+      }
+
+      infoDiv.appendChild(nameDiv);
+      infoDiv.appendChild(descDiv);
+      infoDiv.appendChild(statsDiv);
+
+      const costDiv = document.createElement('div');
+      costDiv.className = 'shop-cost';
+      costDiv.textContent = formatNumber(upg.cost);
+
+      const buyBtn = document.createElement('button');
+      buyBtn.className = 'shop-buy-btn';
+      buyBtn.textContent = 'Buy';
+      buyBtn.disabled = !canAfford(upg.cost);
+      buyBtn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        buyUpgrade(upg);
+      });
+
+      itemDiv.appendChild(infoDiv);
+      itemDiv.appendChild(costDiv);
+      itemDiv.appendChild(buyBtn);
+
+      shopEl.appendChild(itemDiv);
+    }
+  }
+
+  function clickScratch() {
+    state.points += state.pointsPerClick;
+    updateScore();
+    renderShop();
+    saveGame();
+  }
+
+  function autoIncrement() {
+    if(state.pointsPerSecond > 0){
+      state.points += state.pointsPerSecond;
+      updateScore();
+      renderShop();
+      saveGame();
+    }
+  }
+
+  // Initialize
+  loadGame();
+  recalcPoints();
+  updateScore();
+  renderShop();
+
+  scratchBtn.addEventListener('click', clickScratch);
+  setInterval(autoIncrement, 1000);
+  setInterval(saveGame, 10000); // auto save every 10 seconds
+
+})();
+</script>
+</body>
+</html>
