@@ -7,76 +7,119 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
 
-  body {
+  html, body {
     margin: 0;
-    padding: 2rem;
+    height: 100%;
     background: #5cacee;
     font-family: 'Luckiest Guy', cursive;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     color: #333;
     user-select: none;
   }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
   header {
     font-size: 3rem;
     color: #fff;
     text-shadow: 3px 3px 0 #000000aa;
-    margin-bottom: 2rem;
+    width: 100%;
+    text-align: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 1rem 0;
+    user-select: none;
+    background: transparent;
+    z-index: 10;
   }
-  #game {
-    background: #fefefe;
-    border-radius: 30px;
+
+  #container {
+    display: flex;
+    align-items: center;
+    max-width: 900px;
+    width: 100%;
+    padding: 0 2rem;
+    box-sizing: border-box;
+    margin-top: 5rem; /* leave space for header */
+  }
+
+  #clicker-container {
+    width: 320px;
+    height: 320px;
+    background: white;
+    border-radius: 12px;
     box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     padding: 2rem;
-    width: 400px;
-    max-width: 95vw;
+    box-sizing: border-box;
   }
 
   #score {
     font-size: 2.2rem;
-    text-align: center;
     margin-bottom: 1.5rem;
+    font-weight: 700;
     color: #222;
+    user-select: none;
   }
 
   #scratch-button {
-    width: 180px;
-    height: 180px;
-    background: #ffd93b;
-    border: 12px solid #ff8c00;
-    border-radius: 50%;
+    width: 160px;
+    height: 160px;
+    background: #ffffff;
+    border: 4px solid #cccccc;
+    border-radius: 0;
     font-size: 7rem;
-    line-height: 1;
-    color: #ff6600;
+    color: #333333;
     text-align: center;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     user-select: none;
-    box-shadow: 0 6px 0 #f08a00;
-    transition: box-shadow 0.1s ease, transform 0.1s ease;
-    margin: 0 auto 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: box-shadow 0.1s ease, transform 0.1s ease, border-color 0.25s ease;
   }
   #scratch-button:active {
-    box-shadow: 0 1px 0 #f08a00;
-    transform: translateY(5px);
+    box-shadow: 0 2px 3px rgba(0,0,0,0.15);
+    transform: translateY(4px);
+    border-color: #999999;
   }
   #scratch-button:hover {
-    filter: brightness(1.1);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    border-color: #888888;
+    animation: swing 0.6s ease-in-out infinite;
   }
 
   @keyframes swing {
     0%, 100% { transform: rotate(0deg); }
     50% { transform: rotate(15deg); }
   }
-  #scratch-button:hover {
-    animation: swing 0.6s ease-in-out infinite;
+
+  #shop-container {
+    background: #fefefe;
+    border-radius: 30px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    width: 360px;
+    max-width: 95vw;
+    padding: 2rem;
+    margin-left: 2rem;
+    display: flex;
+    flex-direction: column;
+    height: 320px;
+    overflow-y: auto;
+    box-sizing: border-box;
   }
 
   #shop {
-    margin-top: 2rem;
+    margin-top: 0;
   }
   #shop h2 {
     font-family: 'Luckiest Guy', cursive;
@@ -85,6 +128,7 @@
     margin-bottom: 1rem;
     color: #ff6600;
     text-shadow: 2px 2px 0 #f09a00;
+    user-select: none;
   }
 
   .shop-item {
@@ -114,18 +158,21 @@
     font-size: 1.3rem;
     color: #ff6600;
     font-weight: 700;
+    user-select: none;
   }
   .shop-item-desc {
     font-style: italic;
     color: #cc6600;
     font-size: 0.9rem;
     margin-top: 0.1rem;
+    user-select: none;
   }
   .shop-item-stats {
     font-weight: 700;
     color: #ff7e00;
     font-size: 0.95rem;
     margin-top: 0.1rem;
+    user-select: none;
   }
   .shop-cost {
     font-weight: 800;
@@ -133,6 +180,7 @@
     font-size: 1.1rem;
     min-width: 70px;
     text-align: right;
+    user-select: none;
   }
   .shop-buy-btn {
     background: #ff6600;
@@ -158,22 +206,28 @@
   }
 
   #footer {
-    margin-top: 3rem;
+    position: fixed;
+    bottom: 10px;
     font-size: 1rem;
     color: #fff8e1;
     text-align: center;
     text-shadow: 0 0 7px #b56c00aa;
+    width: 100%;
+    user-select: none;
   }
-
 </style>
 </head>
 <body>
   <header>Scratch Clicker</header>
-  <div id="game" role="main" aria-label="Scratch clicker game">
-    <div id="score" aria-live="polite" aria-atomic="true">Points: 0</div>
-    <button id="scratch-button" aria-label="Scratch clickable button" title="Click to earn points">🐱</button>
-    <div id="shop" aria-label="Shop upgrades">
-      <h2>Shop</h2>
+  <div id="container" role="main" aria-label="Scratch clicker game container">
+    <div id="clicker-container">
+      <div id="score" aria-live="polite" aria-atomic="true">Points: 0</div>
+      <button id="scratch-button" aria-label="Scratch clickable button" title="Click to earn points">🐱</button>
+    </div>
+    <div id="shop-container" aria-label="Shop container with scrolling">
+      <div id="shop" aria-label="Shop upgrades">
+        <h2>Shop</h2>
+      </div>
     </div>
   </div>
   <footer id="footer">hai <3</footer>
@@ -187,76 +241,13 @@
     pointsPerClick: 1,
     pointsPerSecond: 0,
     upgrades: [
-      {
-        id: 'pocket-wiper',
-        name: 'Pocket Wiper',
-        description: 'Increases points per click by 1',
-        baseCost: 15,
-        cost: 15,
-        quantity: 0,
-        type: 'click',
-        effect: 1,
-      },
-      {
-        id: 'speed-glove',
-        name: 'Speed Glove',
-        description: 'Increases points per click by 5',
-        baseCost: 100,
-        cost: 100,
-        quantity: 0,
-        type: 'click',
-        effect: 5,
-      },
-      {
-        id: 'auto-scratch',
-        name: 'Auto Scratch',
-        description: 'Earn 2 points automatically every second',
-        baseCost: 200,
-        cost: 200,
-        quantity: 0,
-        type: 'auto',
-        effect: 2,
-      },
-      {
-        id: 'dust-remover',
-        name: 'Dust Remover',
-        description: 'Earn 10 points automatically every second',
-        baseCost: 1200,
-        cost: 1200,
-        quantity: 0,
-        type: 'auto',
-        effect: 10,
-      },
-      {
-        id: 'mega-wiper',
-        name: 'Mega Wiper',
-        description: 'Increases points per click by 15',
-        baseCost: 5000,
-        cost: 5000,
-        quantity: 0,
-        type: 'click',
-        effect: 15,
-      },
-      {
-        id: 'turbo-gloves',
-        name: 'Turbo Gloves',
-        description: 'Increases points per click by 50',
-        baseCost: 22000,
-        cost: 22000,
-        quantity: 0,
-        type: 'click',
-        effect: 50,
-      },
-      {
-        id: 'ultimate-auto-scratch',
-        name: 'Ultimate Auto Scratch',
-        description: 'Earn 100 points automatically every second',
-        baseCost: 50000,
-        cost: 50000,
-        quantity: 0,
-        type: 'auto',
-        effect: 100,
-      }
+      {id: 'pocket-wiper', name: 'Pocket Wiper', description: 'Increases points per click by 1', baseCost: 15, cost: 15, quantity: 0, type: 'click', effect: 1, maxQuantity: 100},
+      {id: 'speed-glove', name: 'Speed Glove', description: 'Increases points per click by 5', baseCost: 100, cost: 100, quantity: 0, type: 'click', effect: 5, maxQuantity: 50},
+      {id: 'auto-scratch', name: 'Auto Scratch', description: 'Earn 2 points automatically every second', baseCost: 200, cost: 200, quantity: 0, type: 'auto', effect: 2, maxQuantity: 50},
+      {id: 'dust-remover', name: 'Dust Remover', description: 'Earn 10 points automatically every second', baseCost: 1200, cost: 1200, quantity: 0, type: 'auto', effect: 10, maxQuantity: 40},
+      {id: 'mega-wiper', name: 'Mega Wiper', description: 'Increases points per click by 15', baseCost: 5000, cost: 5000, quantity: 0, type: 'click', effect: 15, maxQuantity: 30},
+      {id: 'turbo-gloves', name: 'Turbo Gloves', description: 'Increases points per click by 50', baseCost: 22000, cost: 22000, quantity: 0, type: 'click', effect: 50, maxQuantity: 20},
+      {id: 'ultimate-auto-scratch', name: 'Ultimate Auto Scratch', description: 'Earn 100 points automatically every second', baseCost: 50000, cost: 50000, quantity: 0, type: 'auto', effect: 100, maxQuantity: 15}
     ]
   };
 
@@ -305,6 +296,9 @@
     let ppc = 1;
     let pps = 0;
     for(const upg of state.upgrades){
+      if(typeof upg.maxQuantity === 'number' && upg.quantity > upg.maxQuantity){
+        upg.quantity = upg.maxQuantity;
+      }
       if(upg.type === 'click'){
         ppc += upg.effect * upg.quantity;
       } else if(upg.type === 'auto'){
@@ -325,6 +319,7 @@
 
   function buyUpgrade(upg) {
     if(!canAfford(upg.cost)) return;
+    if(upg.maxQuantity !== undefined && upg.quantity >= upg.maxQuantity) return;
     state.points -= upg.cost;
     upg.quantity++;
     upg.cost = Math.floor(upg.cost * 1.5);
@@ -335,15 +330,17 @@
   }
 
   function renderShop() {
-    // clear old items except h2
     while(shopEl.children.length > 1){
       shopEl.removeChild(shopEl.lastChild);
     }
-    // Create shop items
     for(const upg of state.upgrades){
       const itemDiv = document.createElement('div');
       itemDiv.className = 'shop-item';
-      if(!canAfford(upg.cost)) itemDiv.classList.add('disabled');
+
+      const disabled = (!canAfford(upg.cost) || (upg.maxQuantity !== undefined && upg.quantity >= upg.maxQuantity));
+      if(disabled){
+        itemDiv.classList.add('disabled');
+      }
 
       const infoDiv = document.createElement('div');
       infoDiv.className = 'shop-info';
@@ -375,7 +372,7 @@
       const buyBtn = document.createElement('button');
       buyBtn.className = 'shop-buy-btn';
       buyBtn.textContent = 'Buy';
-      buyBtn.disabled = !canAfford(upg.cost);
+      buyBtn.disabled = disabled;
       buyBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
         buyUpgrade(upg);
@@ -405,7 +402,6 @@
     }
   }
 
-  // Initialize
   loadGame();
   recalcPoints();
   updateScore();
@@ -413,7 +409,7 @@
 
   scratchBtn.addEventListener('click', clickScratch);
   setInterval(autoIncrement, 1000);
-  setInterval(saveGame, 10000); // auto save every 10 seconds
+  setInterval(saveGame, 10000);
 
 })();
 </script>
